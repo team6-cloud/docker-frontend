@@ -1,4 +1,4 @@
-FROM node:21.5.0-alpine3.19
+FROM node:21.5.0-alpine3.19 as builder
 
 WORKDIR /app
 
@@ -7,10 +7,16 @@ ENV PATH /app/node_modules/.bin:$PATH
 # install application dependencies
 COPY package*.json ./
 RUN npm install
-# RUN npm install react-scripts -g
 
 # copy app files
 COPY . .
 
-EXPOSE 3000
-CMD ["npm", "start"]
+# bulding for production
+RUN export NODE_OPTIONS=--openssl-legacy-provider \
+	&& npm run build
+
+## de aqui para abajo mover al siguiente stage
+RUN npm install -g serve
+
+RUN chmod 0750 wrapper.sh
+CMD ["./wrapper.sh"]
